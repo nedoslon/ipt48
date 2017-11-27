@@ -1,0 +1,146 @@
+en
+conf t
+
+lldp run
+service nagle
+no service pad
+service unsupported-transceiver
+no errdisable detect cause gbic-invalid
+no service config
+service tcp-keepalives-in
+service tcp-keepalives-out
+service timestamps debug datetime localtime
+service timestamps log datetime localtime
+service password-encryption
+service pt-vty-logging
+logging buffered 50000 debug
+login on-failure log
+!
+hostname ZA_M.haEmek-Child_Acc2
+!
+boot-start-marker
+boot-end-marker
+username admin privilege 15 password 7 00554A0E05691F0D5B79
+aaa new-model
+aaa group server radius group1
+ server 172.19.51.8
+ server 172.19.51.9
+aaa authentication login default local group group1
+aaa authorization exec default local group group1
+aaa accounting exec default start-stop group group1
+aaa session-id common
+clock timezone israel 2 0
+system mtu routing 1500
+
+no ip domain-lookup
+ip domain-name clalit
+spanning-tree mode rapid-pvst
+spanning-tree loopguard default
+spanning-tree extend system-id
+spanning-tree vlan 1-4094 priority 8192
+
+vlan internal allocation policy ascending
+ip tcp selective-ack
+ip tcp path-mtu-discovery age-timer 10
+crypto key generate rsa
+1024
+
+
+interface FastEthernet0/1
+ description Link_to_Primary_Router
+ switchport trunk allowed vlan 1,400
+ switchport mode trunk
+ speed 100
+ duplex full
+ storm-control broadcast level pps 3k
+ spanning-tree bpduguard enable
+!
+interface rang fas0/2 - 11, fas 0/13-45
+ switchport mode access
+ switchport voice vlan 400
+ switchport port-security maximum 4
+ switchport port-security aging time 4
+ switchport port-security
+ storm-control broadcast level pps 3k
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+
+interface  fas0/2
+ desc No Security
+ switchport mode access
+ switchport voice vlan 400
+ storm-control broadcast level pps 3k
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+
+interface  fas0/12
+ desc Clock
+ spe 10
+ dup hal
+
+interface FastEthernet0/46
+ description SRST
+ switchport access vlan 400
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/47
+ description ATA1
+ switchport access vlan 400
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+interface FastEthernet0/48
+ description ATA2
+ switchport access vlan 400
+ switchport mode access
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+!
+
+interface ran GigabitEthernet0/1-2
+ switchport mode trunk
+ switchport nonegotiate
+!
+interface Vlan1
+ ip address 1.15.144.249 255.255.255.0
+ no ip route-cache
+ no shut
+
+ip default-gateway 1.15.144.254
+no ip http server
+ip http authentication aaa login-authentication radius
+ip http authentication aaa exec-authorization radius
+ip http secure-server
+errdisable recovery cause psecure-violation
+errdisable recovery cause storm-control 
+alias exec e show int counters errors  | e 0 +0 +0 +0
+alias exec h show int status  | i half
+
+snmp-server community RcomS180ro RO
+snmp-server community WcomS180rw RW
+radius-server dead-criteria time 1 tries 3
+radius-server host 172.19.51.9 key 7 02241E49062A5D711C18
+radius-server host 172.19.51.8 key 7 072D3B5E43254B554744
+radius-server retry method reorder
+radius-server timeout 10
+radius-server deadtime 1
+banner motd ^
+
+
+                 This device is a private property;
+      Unauthorized use and access are strictly prohibited!!!
+        To access this device please call system support!!!
+
+^C
+
+line con 0
+line vty 0 15
+logging synchronous
+transport input ssh 
+ntp server 172.16.10.1
+ntp server 172.16.10.2
+end
+wr
